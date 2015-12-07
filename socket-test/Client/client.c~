@@ -1,15 +1,19 @@
 // Simple UDP client
 
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<arpa/inet.h>
-#include<sys/socket.h>
+#include <inttypes.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <time.h>
  
 #define SERVER "127.0.0.1"
 #define BUFLEN 512	//Max length of buffer
 #define PORT 8888	//The port on which to send data
- 
+#define TESTLEN 1000000
+
 void die(char *s)
 {
 	perror(s);
@@ -22,6 +26,11 @@ int main(void)
 	int s, i, slen=sizeof(si_other);
 	char buf[BUFLEN];
 	char message[BUFLEN];
+	// Time
+	long nsBefore, nsAfter;
+	time_t sBefore, sAfter;
+	struct timespec specBefore, specAfter;
+	intmax_t interval, maxInt = 0, minInt = 1000000, avgInt = 0, avgInt2 = 0;
  
 	if ( (s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
 	{
@@ -38,11 +47,12 @@ int main(void)
 		exit(1);
 	}
  
-	while(1)
+	printf("Enter message : ");
+	fgets(message, sizeof(message), stdin);
+	for (i = 0; i < TESTLEN; i++)
 	{
-		printf("Enter message : ");
-		gets(message);
-		 
+		// Getting the time before
+		clock_gettime(CLOCK_MONOTONIC, &specBefore);
 		//send the message
 		if (sendto(s, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen)==-1)
 		{
@@ -57,8 +67,23 @@ int main(void)
 		{
 			die("recvfrom()");
 		}
-			puts(buf);
+		// Getting the time after
+		clock_gettime(CLOCK_MONOTONIC, &specAfter);
+		sBefore = specBefore.tv_sec;
+		sAfter = specAfter.tv_sec;
+		nsBefore = specBefore.tv_nsec;
+		nsAfter = specAfter.tv_nsec;
+		
+		// Counting time interval
+		interval = (sAfter-sBefore)*1.0e9 + (nsAfter-nsBefore);
+		if (interval > maxInt) maxInt = interval;
+		if (interval < minInt) minInt = interval;
+		avgInt += (interval - avgInt)/(i+1);
+		avgInt2 += interval;
+		printf("%"PRIdMAX"\n", interval);
 	}
+	avgInt2 /= TESTLEN;
+	printf("Max:\t%"PRIdMAX"\nMin:\t%"PRIdMAX"\nAverage:\t%"PRIdMAX"\nAverage2:\t%"PRIdMAX"\n", maxInt, minInt, avgInt, avgInt2);
 	close(s);
 	return 0;
 }

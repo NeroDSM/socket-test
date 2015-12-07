@@ -83,7 +83,7 @@ int main(void)
 		printf("%"PRIdMAX"\n", interval);
 	}
 	avgInt2 /= TESTLEN;
-	printf("Max:\t%"PRIdMAX"\nMin:\t%"PRIdMAX"\nAverage:\t%"PRIdMAX"\nAverage2:\t%"PRIdMAX"\n", maxInt, minInt, avgInt, avgInt2);
+	printf("Max:\t%"PRIdMAX"\nMin:\t%"PRIdMAX"\nAverage:\t%"PRIdMAX"\n", maxInt, minInt, avgInt2);
 	close(s);
 	return 0;
 }
